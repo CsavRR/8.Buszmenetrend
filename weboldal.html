@@ -1,12 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hu">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buszmenetrend</title>
+  <meta charset="UTF-8">
+  <title>Buszmenetrend</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      font-family: sans-serif;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px 10px;
+      text-align: center;
+    }
+    th:first-child,
+    td:first-child {
+      text-align: left;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-    <h1>Buszmenetrend</h1>
-    
+<h1>A busz (egyáltalán nem a 70-es)</h1>
+<table id="menetrend">
+  <thead>
+    <tr>
+      <th>Megálló</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+const jarat70 = {
+  megallok: [
+    {nev: "Szeged, Mars tér (Szent Rókus tér)", pluszPerc: 0},
+    {nev: "Mars tér (aut. áll.)", pluszPerc: 1},
+    {nev: "Bartók tér", pluszPerc: 2},
+    {nev: "Széchenyi tér", pluszPerc: 4},
+    {nev: "Szeged, Torontál tér", pluszPerc: 7},
+    {nev: "Újszeged, Gabonakutató", pluszPerc: 8},
+    {nev: "Alsó kikötő sor", pluszPerc: 10},
+    {nev: "Hatházak", pluszPerc: 11},
+    {nev: "Szeged, Akácfa utca", pluszPerc: 12},
+    {nev: "Füvészkert", pluszPerc: 13}
+  ],
+  indulasiIdok: ["6:45", "7:15", "7:45", "8:45", "9:45", "10:45", "11:45", "12:45", "13:15", "13:45", "14:15", "14:45", "15:15", "15:45", "16:15", "16:45", "17:15", "17:45", "18:15", "18:45", "19:15", "19:45", "20:45", "21:45", "22:45",]
+};
+
+function idoHozzaadas(alapIdo, pluszPerc) {
+  const [ora, perc] = alapIdo.split(":").map(Number);
+  const d = new Date();
+  d.setHours(ora, perc + pluszPerc, 0);
+  return d.toTimeString().slice(0, 5);
+}
+
+const tabla = document.getElementById("menetrend");
+const theadSor = tabla.querySelector("thead tr");
+const tbody = tabla.querySelector("tbody");
+
+// fejléc
+jarat70.indulasiIdok.forEach(ido => {
+  const th = document.createElement("th");
+  th.textContent = ido;
+  theadSor.appendChild(th);
+});
+
+// sorok
+jarat70.megallok.forEach(megallo => {
+  const tr = document.createElement("tr");
+
+  const tdNev = document.createElement("td");
+  tdNev.textContent = megallo.nev;
+  tr.appendChild(tdNev);
+
+  jarat70.indulasiIdok.forEach(ido => {
+    const td = document.createElement("td");
+    td.textContent = idoHozzaadas(ido, megallo.pluszPerc);
+    tr.appendChild(td);
+  });
+
+  tbody.appendChild(tr);
+});
+</script>
+
 </body>
 </html>
