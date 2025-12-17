@@ -4,38 +4,29 @@
   <meta charset="UTF-8">
   <title>Buszmenetrend</title>
   <style>
-    table {
-      border-collapse: collapse;
-      font-family: sans-serif;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 6px 10px;
-      text-align: center;
-    }
-    th:first-child,
-    td:first-child {
-      text-align: left;
-      font-weight: bold;
-    }
-    button {
-      cursor: pointer;
-      margin: 2px;
-    }
+    table { border-collapse: collapse; font-family: sans-serif; }
+    th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: center; }
+    th:first-child, td:first-child { text-align: left; font-weight: bold; }
+    button { cursor: pointer; margin: 2px; }
+    h1 { text-align: center; }
+    div { text-align: right; }
+    div>h3 { margin-right: 221px;}
   </style>
 </head>
 <body>
 
 <h1>A busz (egyáltalán nem a 70-es)</h1>
 
-<table id="menetrend"></table>
 
+<table id="menetrend"></table>
+<div>
 <h3>Új megálló hozzáadása</h3>
 <input id="ujNev" placeholder="Megálló neve">
 <input id="ujPerc" type="number" placeholder="+ perc">
 <button id="hozzaad">Hozzáad</button>
-
+</div>
 <script>
+// adatforrás: megállók és indulási idők
 const jarat70 = {
   megallok: [
     {nev: "Szeged, Mars tér (Szent Rókus tér)", pluszPerc: 0},
@@ -58,39 +49,39 @@ const jarat70 = {
   ]
 };
 
+// kiszámolja a megállóhoz tartozó érkezési időt
 function idoHozzaadas(alapIdo, pluszPerc) {
   const [ora, perc] = alapIdo.split(":").map(Number);
   const d = new Date();
   d.setHours(ora, perc + pluszPerc, 0);
-  return d.toTimeString().slice(0, 5);
+  return d.toTimeString().slice(0, 5); // HH:MM formátum
 }
 
+// táblázat létrehozása és frissítése
 function tablaRajzolas() {
   const tabla = document.getElementById("menetrend");
-  tabla.innerHTML = "";
+  tabla.innerHTML = ""; // előző tartalom törlése
 
   // fejléc
   const thead = document.createElement("thead");
   let fejlec = "<tr><th>Megálló</th>";
-  jarat70.indulasiIdok.forEach(i => {
-    fejlec += `<th>${i}</th>`;
-  });
-  fejlec += "<th>Művelet</th></tr>";
+  jarat70.indulasiIdok.forEach(i => { fejlec += `<th>${i}</th>`; });
+  fejlec += "<th>Művelet</th></tr>"; // utolsó oszlop gomboknak
   thead.innerHTML = fejlec;
   tabla.appendChild(thead);
 
-  // törzs
+  // törzs létrehozása
   const tbody = document.createElement("tbody");
 
   jarat70.megallok.forEach((m, index) => {
     const tr = document.createElement("tr");
 
-    let sor = `<td>${m.nev}</td>`;
+    let sor = `<td>${m.nev}</td>`; // megálló neve
     jarat70.indulasiIdok.forEach(ido => {
-      sor += `<td>${idoHozzaadas(ido, m.pluszPerc)}</td>`;
+      sor += `<td>${idoHozzaadas(ido, m.pluszPerc)}</td>`; // minden idő kiszámítása
     });
 
-    // műveletek: módosítás + törlés
+    // gombok: módosítás ✏️ és törlés 🗑️
     sor += `
       <td>
         <button class="modosit" data-index="${index}">✏️</button>
@@ -104,67 +95,53 @@ function tablaRajzolas() {
 
   tabla.appendChild(tbody);
 
-  // események hozzárendelése
+  // módosítás gomb esemény
   tabla.querySelectorAll(".modosit").forEach(btn => {
     btn.addEventListener("click", () => {
       const i = Number(btn.dataset.index);
       const aktualis = jarat70.megallok[i].pluszPerc;
       const uj = prompt(`Új +perc érték (${aktualis}):`, aktualis);
-      if (uj === null) return;
+      if (uj === null) return; // cancel esetén kilép
       const ujPerc = Number(uj);
-      if (isNaN(ujPerc)) {
-        alert("Számot adj meg!");
-        return;
-      }
+      if (isNaN(ujPerc)) { alert("Számot adj meg!"); return; }
       jarat70.megallok[i].pluszPerc = ujPerc;
-      // újrarendezés pluszPerc szerint
-      jarat70.megallok.sort((a,b) => a.pluszPerc - b.pluszPerc);
-      tablaRajzolas();
+      jarat70.megallok.sort((a,b) => a.pluszPerc - b.pluszPerc); // sorrend frissítése
+      tablaRajzolas(); // újrarajzolás
     });
   });
 
+  // törlés gomb esemény
   tabla.querySelectorAll(".torol").forEach(btn => {
     btn.addEventListener("click", () => {
       const i = Number(btn.dataset.index);
       if (!confirm("Biztosan törlöd ezt a megállót?")) return;
-      jarat70.megallok.splice(i, 1);
-      tablaRajzolas();
+      jarat70.megallok.splice(i, 1); // sor törlése
+      tablaRajzolas(); // újrarajzolás
     });
   });
 }
 
-// ➕ új megálló hozzáadása (sorrendbe)
+// új megálló hozzáadása sorrendbe
 document.getElementById("hozzaad").addEventListener("click", () => {
   const nev = document.getElementById("ujNev").value.trim();
   const perc = Number(document.getElementById("ujPerc").value);
 
-  if (!nev) {
-    alert("Add meg a megálló nevét!");
-    return;
-  }
+  if (!nev) { alert("Add meg a megálló nevét!"); return; }
 
-  const ujMegallo = {
-    nev: nev,
-    pluszPerc: isNaN(perc) ? 0 : perc
-  };
+  const ujMegallo = { nev: nev, pluszPerc: isNaN(perc) ? 0 : perc };
 
-  const index = jarat70.megallok.findIndex(
-    m => m.pluszPerc > ujMegallo.pluszPerc
-  );
-
-  if (index === -1) {
-    jarat70.megallok.push(ujMegallo);
-  } else {
-    jarat70.megallok.splice(index, 0, ujMegallo);
-  }
+  // sorrendbe illesztés pluszPerc szerint
+  const index = jarat70.megallok.findIndex(m => m.pluszPerc > ujMegallo.pluszPerc);
+  if (index === -1) jarat70.megallok.push(ujMegallo); // végére
+  else jarat70.megallok.splice(index, 0, ujMegallo); // középre
 
   document.getElementById("ujNev").value = "";
   document.getElementById("ujPerc").value = "";
 
-  tablaRajzolas();
+  tablaRajzolas(); // táblázat frissítése
 });
 
-// indítás
+// oldal betöltésekor táblázat megjelenítése
 tablaRajzolas();
 </script>
 
